@@ -1,31 +1,23 @@
--- LocalScript trong StarterGui > ScreenGui
 local Players = game:GetService("Players")
-local TeleportService = game:GetService("TeleportService")
-local HttpService = game:GetService("HttpService")
 
-local LocalPlayer = Players.LocalPlayer
-local PlaceId = game.PlaceId
-local JobId = game.JobId
-
--- UI tham chiếu
 local screenGui = script.Parent
 local loadingFrame = screenGui:WaitForChild("LoadingFrame")
 local playerCountLabel = screenGui:WaitForChild("PlayerCountLabel")
 
--- Cấu hình giao diện PlayerCountLabel
+-- Cấu hình PlayerCountLabel
 playerCountLabel.TextScaled = true
 playerCountLabel.Size = UDim2.new(0, 300, 0, 50)
 playerCountLabel.Position = UDim2.new(0, 20, 0, 20)
 playerCountLabel.BackgroundTransparency = 0.3
 
--- 1. Loading Screen
+-- Loading screen
 if not game:IsLoaded() then
     loadingFrame.Visible = true
     game.Loaded:Wait()
 end
 loadingFrame.Visible = false
 
--- 2. Hàm cập nhật số người chơi
+-- Hàm cập nhật số người chơi
 local function updateCount()
     local count = #Players:GetPlayers()
     playerCountLabel.Text = "👥 Người chơi trong server: " .. count
@@ -34,15 +26,10 @@ end
 -- Gọi lần đầu
 updateCount()
 
--- 3. Cập nhật mỗi 3 giây
+-- Cập nhật mỗi 3 giây
 task.spawn(function()
     while true do
         updateCount()
-        task.wait(3) -- chờ 3 giây
+        task.wait(3)
     end
 end)
-
--- 4. (Tuỳ chọn) In ra console thông tin server
-print("LocalPlayer:", LocalPlayer.Name)
-print("PlaceId:", PlaceId)
-print("JobId:", JobId)
