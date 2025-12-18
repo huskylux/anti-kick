@@ -1,169 +1,48 @@
---[[ 
-ALL IN ONE SCRIPT (ENGLISH)
-1. Auto Hop after 60 seconds
-2. Anti Kick (client-side)
-3. Auto Rejoin to Least Player Server when kicked
-4. Always-On Status UI
-]]
-
--- ================= SERVICES =================
+-- LocalScript trong StarterGui > ScreenGui
 local Players = game:GetService("Players")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
-local CoreGui = game:GetService("CoreGui")
 
 local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-
 local PlaceId = game.PlaceId
 local JobId = game.JobId
-local WAIT_TIME = 60 -- seconds
 
--- ================= UI =================
-local gui = Instance.new("ScreenGui")
-gui.Name = "AllInOneStatusUI"
-gui.ResetOnSpawn = false
-gui.Parent = PlayerGui -- IMPORTANT: works on all executors
+-- UI tham chiếu
+local screenGui = script.Parent
+local loadingFrame = screenGui:WaitForChild("LoadingFrame")
+local playerCountLabel = screenGui:WaitForChild("PlayerCountLabel")
 
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 300, 0, 130)
-frame.Position = UDim2.new(0, 15, 0.65, 0)
-frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-frame.BorderSizePixel = 0
-frame.Active = true
-frame.Draggable = true
+-- Cấu hình giao diện PlayerCountLabel
+playerCountLabel.TextScaled = true
+playerCountLabel.Size = UDim2.new(0, 300, 0, 50)
+playerCountLabel.Position = UDim2.new(0, 20, 0, 20)
+playerCountLabel.BackgroundTransparency = 0.3
 
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+-- 1. Loading Screen
+if not game:IsLoaded() then
+    loadingFrame.Visible = true
+    game.Loaded:Wait()
+end
+loadingFrame.Visible = false
 
-local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1, -10, 0, 26)
-title.Position = UDim2.new(0, 5, 0, 5)
-title.BackgroundTransparency = 1
-title.Text = "🛡 AUTO HOP / ANTI KICK"
-title.Font = Enum.Font.GothamBold
-title.TextSize = 14
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
-
-local status = Instance.new("TextLabel", frame)
-status.Size = UDim2.new(1, -10, 0, 90)
-status.Position = UDim2.new(0, 5, 0, 34)
-status.BackgroundTransparency = 1
-status.TextWrapped = true
-status.TextXAlignment = Left
-status.TextYAlignment = Top
-status.Font = Enum.Font.Gotham
-status.TextSize = 13
-status.TextColor3 = Color3.fromRGB(0, 255, 140)
-
-local function setStatus(text)
-    status.Text = text
+-- 2. Hàm cập nhật số người chơi
+local function updateCount()
+    local count = #Players:GetPlayers()
+    playerCountLabel.Text = "👥 Người chơi trong server: " .. count
 end
 
--- ================= INITIAL STATUS =================
-setStatus(
-    "Anti Kick: ON\n" ..
-    "Auto Rejoin: ON\n" ..
-    "Auto Hop: Waiting 60s"
-)
+-- Gọi lần đầu
+updateCount()
 
--- ================= ANTI KICK =================
-pcall(function()
-    hookfunction(LocalPlayer.Kick, function()
-        setStatus(
-            "Kick Blocked (Client)\n" ..
-            "Auto Rejoin: ON"
-        )
-        return
-    end)
-end)
-
-pcall(function()
-    local mt = getrawmetatable(game)
-    local old = mt.__namecall
-    setreadonly(mt, false)
-
-    mt.__namecall = newcclosure(function(self, ...)
-        if getnamecallmethod() == "Kick" then
-            setStatus(
-                "Kick Blocked (__namecall)\n" ..
-                "Auto Rejoin: ON"
-            )
-            return
-        end
-        return old(self, ...)
-    end)
-
-    setreadonly(mt, true)
-end)
-
--- ================= FIND LEAST PLAYER SERVER =================
-local function getLeastServer()
-    local cursor = ""
-    local bestServer, lowest = nil, math.huge
-
-    repeat
-        local url = string.format(
-            "https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100%s",
-            PlaceId,
-            cursor ~= "" and "&cursor=" .. cursor or ""
-        )
-
-        local body = game:HttpGet(url)
-        local data = HttpService:JSONDecode(body)
-
-        for _, server in ipairs(data.data) do
-            if server.id ~= JobId and server.playing < server.maxPlayers then
-                if server.playing < lowest then
-                    lowest = server.playing
-                    bestServer = server.id
-                end
-            end
-        end
-
-        cursor = data.nextPageCursor
-    until not cursor
-
-    return bestServer, lowest
-end
-
--- ================= AUTO REJOIN WHEN KICKED =================
-CoreGui.RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
-    if child.Name == "ErrorPrompt" then
-        setStatus("You were kicked!\nSearching least server...")
-        task.wait(1)
-
-        local serverId, count = getLeastServer()
-        if serverId then
-            setStatus("Rejoining server (" .. count .. " players)")
-            TeleportService:TeleportToPlaceInstance(PlaceId, serverId, LocalPlayer)
-        else
-            setStatus("Rejoining random server...")
-            TeleportService:Teleport(PlaceId, LocalPlayer)
-        end
-    end
-end)
-
--- ================= AUTO HOP AFTER 60s =================
+-- 3. Cập nhật mỗi 3 giây
 task.spawn(function()
-    for i = WAIT_TIME, 1, -1 do
-        setStatus(
-            "Anti Kick: ON\n" ..
-            "Auto Rejoin: ON\n" ..
-            "Auto Hop in: " .. i .. "s"
-        )
-        task.wait(1)
-    end
-
-    setStatus("Searching least player server...")
-    local serverId, count = getLeastServer()
-
-    if serverId then
-        setStatus("Hopping to server (" .. count .. " players)")
-        task.wait(1)
-        TeleportService:TeleportToPlaceInstance(PlaceId, serverId, LocalPlayer)
-    else
-        setStatus("No server found, rejoining...")
-        task.wait(1)
-        TeleportService:Teleport(PlaceId, LocalPlayer)
+    while true do
+        updateCount()
+        task.wait(3) -- chờ 3 giây
     end
 end)
+
+-- 4. (Tuỳ chọn) In ra console thông tin server
+print("LocalPlayer:", LocalPlayer.Name)
+print("PlaceId:", PlaceId)
+print("JobId:", JobId)
