@@ -1,4 +1,4 @@
--- LocalScript trong StarterGui (không cần tạo sẵn UI)
+-- LocalScript trong StarterGui
 local Players = game:GetService("Players")
 
 -- Tạo ScreenGui
@@ -28,8 +28,8 @@ loadingText.Parent = loadingFrame
 -- Tạo PlayerCountLabel
 local playerCountLabel = Instance.new("TextLabel")
 playerCountLabel.Name = "PlayerCountLabel"
-playerCountLabel.Size = UDim2.new(0.4,0,0.1,0)
-playerCountLabel.Position = UDim2.new(0.3,0,0.05,0)
+playerCountLabel.Size = UDim2.new(0.5,0,0.1,0)
+playerCountLabel.Position = UDim2.new(0.25,0,0.05,0)
 playerCountLabel.BackgroundColor3 = Color3.fromRGB(50,50,50)
 playerCountLabel.BackgroundTransparency = 0.2
 playerCountLabel.TextScaled = true
