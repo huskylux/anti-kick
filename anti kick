@@ -1,14 +1,41 @@
+-- LocalScript trong StarterGui (không cần tạo sẵn UI)
 local Players = game:GetService("Players")
 
-local screenGui = script.Parent
-local loadingFrame = screenGui:WaitForChild("LoadingFrame")
-local playerCountLabel = screenGui:WaitForChild("PlayerCountLabel")
+-- Tạo ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "MainUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 
--- Cấu hình PlayerCountLabel
+-- Tạo LoadingFrame
+local loadingFrame = Instance.new("Frame")
+loadingFrame.Name = "LoadingFrame"
+loadingFrame.Size = UDim2.new(1,0,1,0)
+loadingFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
+loadingFrame.BackgroundTransparency = 0.3
+loadingFrame.Parent = screenGui
+
+local loadingText = Instance.new("TextLabel")
+loadingText.Size = UDim2.new(0.3,0,0.1,0)
+loadingText.Position = UDim2.new(0.35,0,0.45,0)
+loadingText.Text = "Loading..."
+loadingText.TextScaled = true
+loadingText.Font = Enum.Font.SourceSansBold
+loadingText.TextColor3 = Color3.fromRGB(255,255,255)
+loadingText.BackgroundTransparency = 1
+loadingText.Parent = loadingFrame
+
+-- Tạo PlayerCountLabel
+local playerCountLabel = Instance.new("TextLabel")
+playerCountLabel.Name = "PlayerCountLabel"
+playerCountLabel.Size = UDim2.new(0.4,0,0.1,0)
+playerCountLabel.Position = UDim2.new(0.3,0,0.05,0)
+playerCountLabel.BackgroundColor3 = Color3.fromRGB(50,50,50)
+playerCountLabel.BackgroundTransparency = 0.2
 playerCountLabel.TextScaled = true
-playerCountLabel.Size = UDim2.new(0, 300, 0, 50)
-playerCountLabel.Position = UDim2.new(0, 20, 0, 20)
-playerCountLabel.BackgroundTransparency = 0.3
+playerCountLabel.Font = Enum.Font.SourceSansBold
+playerCountLabel.TextColor3 = Color3.fromRGB(255,255,255)
+playerCountLabel.Parent = screenGui
 
 -- Loading screen
 if not game:IsLoaded() then
